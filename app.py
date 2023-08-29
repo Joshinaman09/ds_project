@@ -1,21 +1,42 @@
-import streamlit as st
 import cv2
+import streamlit as st
 import cvlib as cv
 from cvlib.object_detection import draw_bbox
+from gtts import gTTS
+from playsound import playsound
 
 def main():
-    st.title("Object Detection with Streamlit")
+    st.title("Real-time Object Detection with Streamlit")
 
-    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
+    # Open the webcam
+    video = cv2.VideoCapture(0)
+    labels = []
 
-    if uploaded_file is not None:
-        image = cv2.imread(uploaded_file)
-        bbox, label, conf = cv.detect_common_objects(image)
-        output_image = draw_bbox(image, bbox, label, conf)
-        st.image(output_image, caption="Detected Objects", use_column_width=True)
+    stframe = st.empty()
+
+    while True:
+        ret, frame = video.read()
+        if not ret:
+            break  # Break the loop if no more frames are available
+
+        bbox, label, conf = cv.detect_common_objects(frame)
+
+        output_image = draw_bbox(frame, bbox, label, conf)
+
+        stframe.image(output_image, channels="BGR", caption='Real-time Object Detection')
 
         for item in label:
-            st.write(item)
+            if item in labels:
+                pass
+            else:
+                labels.append(item)
+            
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break  # Press 'q' to exit the loop
+
+    video.release()
+    cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()
